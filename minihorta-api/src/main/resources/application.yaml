@@ -19,3 +19,6 @@ spring:
 
         jdbc:
           dialect: org.hibernate.dialect.PosgtreSQLDialect
+
+server:
+  port: 3000

@@ -1,7 +1,10 @@
 package com.minihorta.api.minihorta_api.services;
 
-import com.minihorta.api.minihorta_api.dtos.HumiditySensorDto;
+import java.util.List;
+
+import com.minihorta.api.minihorta_api.dtos.SensorDto;
 
 public interface SensorService {
-	Boolean postSensor(HumiditySensorDto sensorDto);
+	Boolean postSensor(SensorDto sensorDto);
+	List<SensorDto> getSensors();
 }
