@@ -48,11 +48,17 @@ void setup() {
 }
 
 void sendSensorData() {
+  if (isnan(temperature)) {
+    Serial.println("Failed to read temperature from DHT sensor!");
+    delay(500);
+    return;
+  }
+
   // Stringified json dto
   String jsonBody = "{\"temperature\": " + String(temperature);
   jsonBody = jsonBody + ", \"humidity\": " + String(humidity) + " }";
 
-  Serial.println("Body -> " + jsonBody);
+  Serial.printf("[HTTP] POST /sensors body: %s\n", jsonBody);
 
   http.begin(HOST, PORT, "/sensors");
   http.addHeader("Content-Type", "application/json");
@@ -88,21 +94,19 @@ void updateActuatorState() {
   http.end();
 }
 
-void loop() {
+void readSensors() {
   humidity = analogRead(LM393_A_PIN);
   temperature = dht.readTemperature();
+}
 
-  if (isnan(temperature)) {
-    Serial.println("Failed to read temperature from DHT sensor!");
-    delay(500);
-    return;
+void loop() {
+  readSensors();
+
+  if (wifiMulti.run() == WL_CONNECTED) {
+    sendSensorData();
+  
+    updateActuatorState();
   }
-
-  if (wifiMulti.run() != WL_CONNECTED) return;
-
-  sendSensorData();
-
-  updateActuatorState();
 
   delay(1000);
 }
