@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: minihorta-api
+
+  config:
+    name: dev
+
+  datasource:
+    url: jdbc:postgresql://localhost:5440/minihorta_db
+    username: minihorta_admin
+    password: M1N1H0RT4_P4SSW0RD
+
+  jpa:
+    generate-ddl: true
+    properties:
+      hibernate:
+        ddl-auto: update
+        format-sql: true
+
+        jdbc:
+          dialect: org.hibernate.dialect.PosgtreSQLDialect
