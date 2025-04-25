@@ -74,21 +74,21 @@ void sendSensorData() {
 }
 
 void updateActuatorState() {
-  http.begin(HOST, PORT, "/actuator-state");
+  http.begin(HOST, PORT, "/actuators/state");
   http.addHeader("Content-Type", "application/json");
 
   int httpCode = http.GET();
   if (httpCode > 0) {
-    Serial.printf("[HTTP] GET /actuator-state code: %d\n", httpCode);
+    Serial.printf("[HTTP] GET /actuators/state code: %d\n", httpCode);
     String response = http.getString();
     response.trim();
-    Serial.printf("[HTTP] GET /actuator-state response: %s\n", response);
+    Serial.printf("[HTTP] GET /actuators/state response: %s\n", response);
 
     bool state = (response == "true");
     
     digitalWrite(ACTUATOR_PIN, state ? HIGH : LOW);
   } else {
-    Serial.printf("[HTTP] GET /actuator-state error: %s\n", http.errorToString(httpCode).c_str());
+    Serial.printf("[HTTP] GET /actuators/state error: %s\n", http.errorToString(httpCode).c_str());
   }
 
   http.end();
