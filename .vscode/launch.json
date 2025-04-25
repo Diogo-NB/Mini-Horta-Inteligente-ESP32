@@ -1,0 +1,14 @@
+{
+	"configurations": [
+		{
+			"type": "java",
+			"name": "Spring Boot-MinihortaApiApplication<minihorta-api>",
+			"request": "launch",
+			"cwd": "${workspaceFolder}",
+			"mainClass": "com.minihorta.api.minihorta_api.MinihortaApiApplication",
+			"projectName": "minihorta-api",
+			"args": "",
+			"envFile": "${workspaceFolder}/.env"
+		}
+	]
+}
