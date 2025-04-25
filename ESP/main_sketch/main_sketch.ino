@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <ArduinoJson.h>
 
 #include <WiFi.h>
 #include <WiFiMulti.h>
@@ -54,16 +55,20 @@ void sendSensorData() {
     return;
   }
 
-  // Stringified json dto
-  String jsonBody = "{\"temperature\": " + String(temperature);
-  jsonBody = jsonBody + ", \"humidity\": " + String(humidity) + " }";
+  JsonDocument sensorDataDoc;
+  sensorDataDoc["temperature"] = temperature;
+  sensorDataDoc["humidity"] = humidity;
 
-  Serial.printf("[HTTP] POST /sensors body: %s\n", jsonBody);
+  Serial.printf("[HTTP] POST /sensors body:");
+  serializeJsonPretty(sensorDataDoc, Serial);
 
   http.begin(HOST, PORT, "/sensors");
   http.addHeader("Content-Type", "application/json");
 
-  int httpCode = http.POST(jsonBody);
+  String reqBody;
+  serializeJson(sensorDataDoc, reqBody);
+
+  int httpCode = http.POST(reqBody);
   if (httpCode > 0) {
     Serial.printf("[HTTP] POST /sensors code: %d\n", httpCode);
   } else {
@@ -80,12 +85,17 @@ void updateActuatorState() {
   int httpCode = http.GET();
   if (httpCode > 0) {
     Serial.printf("[HTTP] GET /actuator-state code: %d\n", httpCode);
-    String response = http.getString();
-    response.trim();
-    Serial.printf("[HTTP] GET /actuator-state response: %s\n", response);
 
-    bool state = (response == "true");
+    JsonDocument actuatorStateDoc;
+    String response = http.getString();
+
+    deserializeJson(actuatorStateDoc, response);
+
+    Serial.printf("[HTTP] GET /actuator-state response:");
+    serializeJsonPretty(actuatorStateDoc, Serial);
     
+    bool state = actuatorStateDoc["state"];
+
     digitalWrite(ACTUATOR_PIN, state ? HIGH : LOW);
   } else {
     Serial.printf("[HTTP] GET /actuator-state error: %s\n", http.errorToString(httpCode).c_str());
