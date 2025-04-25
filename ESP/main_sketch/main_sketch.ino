@@ -1,17 +1,10 @@
-/**
- * reuseConnection.ino
- *
- *  Created on: 22.11.2015
- *
- */
-
 #include <Arduino.h>
 
 #include <WiFi.h>
 #include <WiFiMulti.h>
 #include <HTTPClient.h>
 
-#include "DHT.h"
+#include "DHT.h" // https://github.com/adafruit/DHT-sensor-library
 
 #define SSID "SSID"
 #define PASSWORD "PASSWORD"
@@ -20,6 +13,7 @@
 
 #define DHT_PIN 4 
 #define LM393_A_PIN 36 // ANALOG INPUT 
+#define ACTUATOR_PIN 5
 
 WiFiMulti wifiMulti;
 
@@ -32,6 +26,7 @@ float temperature;
 
 void setup() {
   pinMode(LM393_A_PIN, INPUT);
+  pinMode(ACTUATOR_PIN, OUTPUT);
 
   Serial.begin(115200);
 
@@ -52,6 +47,47 @@ void setup() {
   http.setReuse(true);
 }
 
+void sendSensorData() {
+  // Stringified json dto
+  String jsonBody = "{\"temperature\": " + String(temperature);
+  jsonBody = jsonBody + ", \"humidity\": " + String(humidity) + " }";
+
+  Serial.println("Body -> " + jsonBody);
+
+  http.begin(HOST, PORT, "/sensors");
+  http.addHeader("Content-Type", "application/json");
+
+  int httpCode = http.POST(jsonBody);
+  if (httpCode > 0) {
+    Serial.printf("[HTTP] POST /sensors code: %d\n", httpCode);
+  } else {
+    Serial.printf("[HTTP] POST /sensors error: %s\n", http.errorToString(httpCode).c_str());
+  }
+
+  http.end();
+}
+
+void updateActuatorState() {
+  http.begin(HOST, PORT, "/actuator-state");
+  http.addHeader("Content-Type", "application/json");
+
+  int httpCode = http.GET();
+  if (httpCode > 0) {
+    Serial.printf("[HTTP] GET /actuator-state code: %d\n", httpCode);
+    String response = http.getString();
+    response.trim();
+    Serial.printf("[HTTP] GET /actuator-state response: %s\n", response);
+
+    bool state = (response == "true");
+    
+    digitalWrite(ACTUATOR_PIN, state ? HIGH : LOW);
+  } else {
+    Serial.printf("[HTTP] GET /actuator-state error: %s\n", http.errorToString(httpCode).c_str());
+  }
+
+  http.end();
+}
+
 void loop() {
   humidity = analogRead(LM393_A_PIN);
   temperature = dht.readTemperature();
@@ -62,26 +98,11 @@ void loop() {
     return;
   }
 
-  if (wifiMulti.run() == WL_CONNECTED) {
-    // Stringified json dto
-    String jsonBody = "{\"temperature\": " + String(temperature) + "\"";
-    jsonBody = jsonBody + ", \"humidity\": " + String(humidity) + "\"}";
-    Serial.println("Body -> " + jsonBody);
+  if (wifiMulti.run() != WL_CONNECTED) return;
 
-    String uri = "/";
+  sendSensorData();
 
-    http.begin(HOST, PORT, uri);
-    http.addHeader("Content-Type", "application/json");
+  updateActuatorState();
 
-    int httpCode = http.POST(jsonBody);
-    if (httpCode > 0) {
-      Serial.printf("[HTTP] GET... code: %d\n", httpCode);
-    } else {
-      Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
-    }
-
-    http.end();
-  }
-
-  delay(2000);
+  delay(1000);
 }
