@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.minihorta.api.minihorta_api.dtos.SensorDto;
+import com.minihorta.api.minihorta_api.entities.SensorEntity;
 import com.minihorta.api.minihorta_api.mappers.SensorMapper;
 import com.minihorta.api.minihorta_api.repositories.SensorRepository;
 import com.minihorta.api.minihorta_api.services.SensorService;
@@ -19,7 +20,7 @@ public class SensorServiceImpl implements SensorService {
 
 	@Override
 	public Boolean postSensor(SensorDto sensorDto) {
-		var sensor = sensorMapper.map(sensorDto);
+		final SensorEntity sensor = sensorMapper.map(sensorDto);
 
 		if (this.sensorRepository.save(sensor) != null) {
 			return Boolean.TRUE;
@@ -30,7 +31,7 @@ public class SensorServiceImpl implements SensorService {
 
 	@Override
 	public List<SensorDto> getSensors() {
-		var sensors = this.sensorRepository.findAll();
+		final List<SensorEntity> sensors = this.sensorRepository.findAll();
 		sensors.sort((sensor1, sensor2) -> sensor1.getTimestamp().compareTo(sensor2.getTimestamp()));
 
 		return sensorMapper.map(sensors);
